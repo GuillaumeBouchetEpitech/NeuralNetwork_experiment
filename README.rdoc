@@ -4,6 +4,13 @@
 Uploaded work to help a few people
 
 
+== If you liked it :
+
+You might want to check this other repository
+
+-> https://github.com/GuillaumeBouchetEpitech/geneticAlgorithm_experiment (live demo available)
+
+
 == Credits :
 
 Vinh Nguyen:
