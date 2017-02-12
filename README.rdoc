@@ -11,6 +11,11 @@ You might want to check this other repository
 -> https://github.com/GuillaumeBouchetEpitech/geneticAlgorithm_experiment (live demo available)
 
 
+== Online demo
+
+link:http://guillaumebouchetepitech.github.io/NeuralNetwork_experiment/js_version/index.html
+
+
 == Diagram
 
 link:./diagrams/class.png
