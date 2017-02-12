@@ -1,0 +1,98 @@
+
+#
+##
+
+
+@startuml
+
+
+title class.txt
+
+
+
+class main << (S,#FFFFFF) EntryPoint >>
+
+
+class TrainingData {
+    Read training data from a text file
+    ==
+    .. attr ..
+    - std::ifstream m_file_trainingData
+    ==
+    .. ctor/dtor ..
+    + TrainingData(const std::string& filename)
+    .. getter/setter ..
+    + bool isEof(void) const
+    .. public method(s) ..
+    + void <color:#FF0000><b>getTopology</b></color>(std::vector<unsigned> &arr_topology)
+    + unsigned <color:#FF0000><b>getNextInputs</b></color>(std::vector<double> &arr_inputVals)
+    + unsigned <color:#FF0000><b>getTargetOutputs</b></color>(std::vector<double> &arr_targetOutputVals)
+}
+
+
+class t_Connection {
+    + double m_weight
+    + double m_deltaWeight
+}
+
+
+class Neuron {
+    ==
+    .. static attr ..
+    - {static} double k_eta
+    - {static} double k_alpha
+    .. static inline method(s) ..
+    - {static} double transferFunction(double x)
+    - {static} double transferFunctionDerivative(double x)
+    - {static} double randomWeight(void)
+    .. attr ..
+    - double m_outputVal
+    - std::vector<t_Connection> m_arr_outputWeights
+    - unsigned m_layer_index
+    - double m_gradient
+    ==
+    .. ctor/dtor ..
+    + Neuron(unsigned numOutputs, unsigned myIndex)
+    .. private method(s) ..
+    - double sumDOW(const std::vector<Neuron> &nextLayer) const
+    .. public method(s) ..
+    + void <color:#FF0000><b>feedForward</b></color>(const std::vector<Neuron>& prevLayer)
+    + void <color:#FF0000><b>calcOutputGradients</b></color>(double targetVal)
+    + void <color:#FF0000><b>calcHiddenGradients</b></color>(const std::vector<Neuron>& nextLayer)
+    + void <color:#FF0000><b>updateInputWeights</b></color>(std::vector<Neuron>& prevLayer)
+    .. getter/setter ..
+    + void setOutputVal(double val)
+    + double getOutputVal(void) const
+}
+
+class Net {
+    ==
+    .. attr ..
+    - std::vector< std::vector<Neuron> > m_arr_layers
+    .. attr -> error ..
+    - double m_error
+    - double m_recentAvgError
+    - {static} double k_recentAvgSmoothingFactor
+    .. ctor/dtor ..
+    + Net(const std::vector<unsigned> &arr_topology)
+    .. public method(s) ..
+    + void <color:#FF0000><b>feedForward</b></color>(const t_vals &inputVals)
+    + void <color:#FF0000><b>backProp</b></color>(const t_vals &targetVals)
+    + void <color:#FF0000><b>getResults</b></color>(t_vals &resultVals) const
+    .. public method(s) -> error ..
+    + double getError(void) const
+    + double getRecentAverageError(void) const
+}
+
+
+Neuron *-- t_Connection
+Net *-- Neuron
+main *-- Net
+main *-- TrainingData
+
+
+@enduml
+
+
+##
+#

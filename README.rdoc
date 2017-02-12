@@ -11,6 +11,11 @@ You might want to check this other repository
 -> https://github.com/GuillaumeBouchetEpitech/geneticAlgorithm_experiment (live demo available)
 
 
+== Diagram
+
+link:./diagrams/class.png
+
+
 == Credits :
 
 Vinh Nguyen:
