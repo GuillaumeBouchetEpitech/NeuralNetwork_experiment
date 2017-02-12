@@ -15,8 +15,8 @@ OBJ=		$(SRC:.cpp=.o)
 #######
 
 
-# CXXFLAGS=	-Wall -W -Wextra -Wunused -O3 -std=c++11 -I./
-CXXFLAGS=	-Wall -W -Wextra -Wunused -g3 -std=c++11 -I./
+CXXFLAGS=	-Wall -W -Wextra -Wunused -O3 -std=c++11 -I./
+# CXXFLAGS=	-Wall -W -Wextra -Wunused -g3 -std=c++11 -I./
 
 LDFLAGS=	
 
