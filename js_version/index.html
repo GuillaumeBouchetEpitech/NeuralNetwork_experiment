@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+
+        <meta charset="utf-8"/>
+
+    </head>
+
+    <body>
+
+        <h1>NeuralNetwork_experiment</h1>
+        <p><u>source code:</u> <a href="https://github.com/GuillaumeBouchetEpitech/NeuralNetwork_experiment">github</a></p>
+
+        <script>
+            // function injectScript_RESET() {
+
+            //     var str_value = "";
+            //     str_value += '\n';
+            //     str_value += 'content += "topology: 2 3 1\\n";\n';
+            //     str_value += '\n';
+            //     str_value += 'for (var i = 2000; i >= 0; --i)\n';
+            //     str_value += '{\n';
+            //     str_value += '    var n1 = (2.0 * Math.random())|0;\n';
+            //     str_value += '    var n2 = (2.0 * Math.random())|0;\n';
+            //     str_value += '\n';
+            //     str_value += '    var t = n1 ^ n2; // xor: should be 0 or 1\n';
+            //     str_value += '    // var t = n1 & n2; // and: should be 0 or 1\n';
+            //     str_value += '    // var t = n1 | n2; // or:  should be 0 or 1\n';
+            //     str_value += '    // var t = !n1 & !n2; // no: should be 0 or 1\n';
+            //     str_value += '\n';
+            //     str_value += '    content += "in: " + n1 + ".0 " + n2 + ".0 \\n";\n';
+            //     str_value += '    content += "out: " + t + ".0 \\n";\n';
+            //     str_value += '}\n';
+            //     str_value += '\n';
+
+            //     document.getElementById("script_area").value = str_value;
+            // }
+
+            function injectScript_AND() {
+
+                var str_value = "";
+                str_value += '\n';
+                str_value += 'content += "topology: 2 3 1\\n";\n';
+                str_value += '\n';
+                str_value += 'for (var i = 2000; i >= 0; --i)\n';
+                str_value += '{\n';
+                str_value += '    var n1 = (2.0 * Math.random())|0;\n';
+                str_value += '    var n2 = (2.0 * Math.random())|0;\n';
+                str_value += '\n';
+                str_value += '    // AND:\n';
+                str_value += '    // 0 + 0 => 0\n';
+                str_value += '    // 0 + 1 => 0\n';
+                str_value += '    // 1 + 0 => 0\n';
+                str_value += '    // 1 + 1 => 1\n';
+                str_value += '    var t = n1 & n2;\n';
+                str_value += '\n';
+                str_value += '    content += "in: " + n1 + ".0 " + n2 + ".0 \\n";\n';
+                str_value += '    content += "out: " + t + ".0 \\n";\n';
+                str_value += '}\n';
+                str_value += '\n';
+
+                document.getElementById("script_area").value = str_value;
+            }
+
+            function injectScript_OR() {
+
+                var str_value = "";
+                str_value += '\n';
+                str_value += 'content += "topology: 2 3 1\\n";\n';
+                str_value += '\n';
+                str_value += 'for (var i = 2000; i >= 0; --i)\n';
+                str_value += '{\n';
+                str_value += '    var n1 = (2.0 * Math.random())|0;\n';
+                str_value += '    var n2 = (2.0 * Math.random())|0;\n';
+                str_value += '\n';
+                str_value += '    // OR:\n';
+                str_value += '    // 0 + 0 => 0\n';
+                str_value += '    // 0 + 1 => 1\n';
+                str_value += '    // 1 + 0 => 1\n';
+                str_value += '    // 1 + 1 => 1\n';
+                str_value += '    var t = n1 | n2;\n';
+                str_value += '\n';
+                str_value += '    content += "in: " + n1 + ".0 " + n2 + ".0 \\n";\n';
+                str_value += '    content += "out: " + t + ".0 \\n";\n';
+                str_value += '}\n';
+                str_value += '\n';
+
+                document.getElementById("script_area").value = str_value;
+            }
+
+            function injectScript_XOR() {
+
+                var str_value = "";
+                str_value += '\n';
+                str_value += 'content += "topology: 2 3 1\\n";\n';
+                str_value += '\n';
+                str_value += 'for (var i = 2000; i >= 0; --i)\n';
+                str_value += '{\n';
+                str_value += '    var n1 = (2.0 * Math.random())|0;\n';
+                str_value += '    var n2 = (2.0 * Math.random())|0;\n';
+                str_value += '\n';
+                str_value += '    // XOR:\n';
+                str_value += '    // 0 + 0 => 0\n';
+                str_value += '    // 0 + 1 => 1\n';
+                str_value += '    // 1 + 0 => 1\n';
+                str_value += '    // 1 + 1 => 0\n';
+                str_value += '    var t = n1 ^ n2;\n';
+                str_value += '\n';
+                str_value += '    content += "in: " + n1 + ".0 " + n2 + ".0 \\n";\n';
+                str_value += '    content += "out: " + t + ".0 \\n";\n';
+                str_value += '}\n';
+                str_value += '\n';
+
+                document.getElementById("script_area").value = str_value;
+            }
+
+            function injectScript_NOT() {
+
+                var str_value = "";
+                str_value += '\n';
+                str_value += 'content += "topology: 2 3 1\\n";\n';
+                str_value += '\n';
+                str_value += 'for (var i = 2000; i >= 0; --i)\n';
+                str_value += '{\n';
+                str_value += '    var n1 = (2.0 * Math.random())|0;\n';
+                str_value += '    var n2 = (2.0 * Math.random())|0;\n';
+                str_value += '\n';
+                str_value += '    // NOT:\n';
+                str_value += '    // 0 + 0 => 1\n';
+                str_value += '    // 0 + 1 => 0\n';
+                str_value += '    // 1 + 0 => 0\n';
+                str_value += '    // 1 + 1 => 0\n';
+                str_value += '    var t = !n1 & !n2;\n';
+                str_value += '\n';
+                str_value += '    content += "in: " + n1 + ".0 " + n2 + ".0 \\n";\n';
+                str_value += '    content += "out: " + t + ".0 \\n";\n';
+                str_value += '}\n';
+                str_value += '\n';
+
+                document.getElementById("script_area").value = str_value;
+            }
+
+            function runScript() {
+
+                var my_eval = function (to_eval) {
+                    var content = "";
+                    var res = "";
+
+                    try {
+                        res = eval(to_eval);
+                    } catch (e) {
+                        res = e;
+                    }
+
+                    return res;
+                }
+
+                var str_value = document.getElementById("script_area").value;
+
+                // console.log('str_value=', str_value);
+
+                var result = my_eval(str_value);
+
+                // console.log('result=', result);
+
+                var elem_output = document.getElementById("output_area");
+                elem_output.value = result;
+            }
+        </script>
+
+        <table border="1">
+
+            <tr>
+                <td>
+
+                    <table border="1">
+                        <tr><th>
+
+                            Script (Training data generator):
+
+                        </th></tr>
+                        <tr><td>
+
+                            <button onclick="injectScript_AND()">Inject script: AND</button>
+                            <button onclick="injectScript_OR()">Inject script: OR</button>
+
+                        </td></tr>
+                        <tr><td>
+
+                            <button onclick="injectScript_XOR()">Inject script: XOR</button>
+                            <button onclick="injectScript_NOT()">Inject script: NOT</button>
+
+                        </td></tr>
+                        <tr><td>
+
+                            <textarea id="script_area" rows=20 cols=70 style="width:100%; height:100%;"></textarea>
+
+                        </td></tr>
+                        <tr><td>
+
+                            <button style="float:right;" onclick="runScript()">Run Script</button>
+
+                        </td></tr>
+                    </table>
+
+                </td>
+                <td>
+
+                    <table border="1" style="width:100%; height:100%;">
+                        <tr><th>
+
+                            Script ouput (Training data):
+
+                        </th></tr>
+                        <tr><td>
+
+                            <textarea id="output_area" rows=20 cols=50 style="width:100%; height:100%;" readonly></textarea>
+
+                        </td></tr>
+                        <tr><td>
+
+                            <button id="runNeuralNet">Launch Artificial Neural Network</button>
+
+                        </td></tr>
+                    </table>
+
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+
+                    <table border="1" style="width:100%; height:100%;">
+                        <tr><th>
+
+                            Artificial Neural Network Rendering:
+
+                        </th></tr>
+                        <tr><td>
+
+                            <canvas
+                                id="main-canvas"
+                                style="border: none; position:relative; left:0px; top:0px;"
+                                width="300"
+                                height="300"
+                                >
+                            </canvas>
+
+                        </td></tr>
+                    </table>
+
+                </td>
+                <td>
+
+                    <table border="1" style="width:100%; height:100%;">
+                        <tr><th>
+
+                            Artificial Neural Network Logs:
+
+                        </th></tr>
+                        <tr><td>
+
+                            <textarea  id="logs_area" rows=20 cols=50 style="width:100%; height:100%;" readonly></textarea>
+
+                        </td></tr>
+                    </table>
+
+                </td>
+            </tr>
+
+        </table>
+
+        <script src="dist/bundle.js"></script>
+
+    </body>
+
+</html>
