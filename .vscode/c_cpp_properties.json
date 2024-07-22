@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/projects/training-logic/src/**",
+                "${workspaceFolder}/projects/training-data-generator/src/**",
+            ],
+            "defines": [
+                "__GNUC__=3",
+                "Py_BUILD_CORE"
+            ],
+            "compilerPath": "/usr/bin/clang++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

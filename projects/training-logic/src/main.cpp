@@ -3,16 +3,19 @@
 // See the associated video for instructions: http://vimeo.com/19569529
 
 
+#include "./TrainingData.hpp"
+
+#include "./utilities/RandomNumberGenerator.hpp"
+
 #include <vector>
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
 #include <cassert>
 #include <cmath>
-#include <fstream>
+// #include <fstream>
 #include <sstream>
 
-// using namespace std;
 
 
 
@@ -20,125 +23,21 @@
 
 
 
-//
-//
-// TrainingData
-
-// Silly class to read training data from a text file -- Replace This.
-// Replace class TrainingData with whatever you need to get input data into the
-// program, e.g., connect to a database, or take a stream of data from stdin, or
-// from a file specified by a command line argument, etc.
-
-typedef std::vector<double> t_vals;
-
-class TrainingData
-{
-private: // attr
-    std::ifstream   m_file_trainingData;
-
-public: // ctor/dtor
-    TrainingData(const std::string& filename);
-
-public: // getter/setter
-    inline bool isEof(void) const { return m_file_trainingData.eof(); }
-
-public: // public method(s)
-    void getTopology(std::vector<unsigned> &arr_topology);
-
-    // Returns the number of input values read from the file:
-    unsigned getNextInputs(t_vals &arr_inputVals);
-    unsigned getTargetOutputs(t_vals &arr_targetOutputVals);
-};
-
-TrainingData::TrainingData(const std::string& filename)
-{
-    m_file_trainingData.open(filename.c_str());
-}
-
-void TrainingData::getTopology(std::vector<unsigned> &arr_topology)
-{
-    std::string line;
-    std::string label;
-
-    std::getline(m_file_trainingData, line);
-    std::stringstream ss(line);
-    ss >> label;
-
-    if (this->isEof() || label != "topology:")
-        abort();
-
-    while (!ss.eof())
-    {
-        unsigned n;
-        ss >> n;
-        arr_topology.push_back(n);
-    }
-}
-
-unsigned TrainingData::getNextInputs(t_vals &arr_inputVals)
-{
-    arr_inputVals.clear();
-
-    std::string str_line;
-    std::getline(m_file_trainingData, str_line);
-    std::stringstream sstr(str_line);
-
-    std::string str_label;
-    sstr >> str_label;
-    if (str_label == "in:")
-    {
-        double dbl_oneValue;
-
-        while (sstr >> dbl_oneValue)
-            arr_inputVals.push_back(dbl_oneValue);
-    }
-
-    return arr_inputVals.size();
-}
-
-unsigned TrainingData::getTargetOutputs(t_vals &arr_targetOutputVals)
-{
-    arr_targetOutputVals.clear();
-
-    std::string str_line;
-    std::getline(m_file_trainingData, str_line);
-    std::stringstream sstr(str_line);
-
-    std::string str_label;
-    sstr >> str_label;
-    if (str_label == "out:")
-    {
-        double dbl_oneValue;
-
-        while (sstr >> dbl_oneValue)
-            arr_targetOutputVals.push_back(dbl_oneValue);
-    }
-
-    return arr_targetOutputVals.size();
-}
-
-// TrainingData
-//
-//
-
-
-
-
-
-
-
-
-struct t_Connection
+struct SynapseConnection
 {
     double m_weight;
-    double m_deltaWeight;
+    double m_deltaWeight = 0;
+
+    SynapseConnection(double weight)
+        : m_weight(weight)
+    {}
 };
-typedef std::vector<t_Connection> t_Connections;
+using SynapseConnections = std::vector<SynapseConnection>;
 
 
-class Neuron;
+class Neuron; // forward declaration
 
-typedef std::vector<Neuron> t_Layer;
+using t_Layer = std::vector<Neuron>;
 
 
 
@@ -169,19 +68,19 @@ private: // static inline method(s)
         return (1.0 - x * x); // tanh derivative
     }
 
-    static inline double randomWeight(void)
-    {
-        return rand() / double(RAND_MAX);
-    }
+    // static inline double randomWeight(void)
+    // {
+    //     return rand() / double(RAND_MAX);
+    // }
 
 private: // attr
     double          m_outputVal;
-    t_Connections   m_arr_outputWeights;
-    unsigned        m_layer_index;
+    SynapseConnections   m_outputWeights;
+    uint32_t        m_layer_index;
     double          m_gradient; // used by the backpropagation
 
 public: // ctor/dtor
-    Neuron(unsigned numOutputs, unsigned myIndex);
+    Neuron(uint32_t numOutputs, uint32_t myIndex, RandomNumberGenerator& rng);
 
 private: // private method(s)
     double  sumDOW(const t_Layer &arr_nextLayer) const;
@@ -200,14 +99,17 @@ public: // getter/setter
 double Neuron::k_eta = 0.15;  // overall net learning rate, [0.0..1.0]
 double Neuron::k_alpha = 0.5; // momentum, multiplier of last deltaWeight, [0.0..1.0]
 
-Neuron::Neuron(unsigned numOutputs, unsigned myIndex)
+Neuron::Neuron(uint32_t numOutputs, uint32_t myIndex, RandomNumberGenerator& rng)
     : m_layer_index(myIndex)
 {
-    for (unsigned i = 0; i < numOutputs; ++i)
+    if (numOutputs == 0) {
+        return;
+    }
+
+    m_outputWeights.reserve(numOutputs);
+    for (uint32_t ii = 0; ii < numOutputs; ++ii)
     {
-        m_arr_outputWeights.push_back(t_Connection());
-        m_arr_outputWeights.back().m_weight = randomWeight();
-        m_arr_outputWeights.back().m_deltaWeight = 0;
+        m_outputWeights.emplace_back(rng.getRangedValue(0.0f, 1.0f));
     }
 }
 
@@ -217,10 +119,12 @@ double Neuron::sumDOW(const t_Layer &arr_nextLayer) const
 
     // Sum our contributions of the errors at the nodes we feed.
 
-    unsigned num_neuron = (arr_nextLayer.size() - 1); // exclude bias neuron
+    const uint32_t num_neuron = uint32_t(arr_nextLayer.size()) - 1; // exclude bias neuron
 
-    for (unsigned n = 0; n < num_neuron; ++n)
-        sum += m_arr_outputWeights[n].m_weight * arr_nextLayer[n].m_gradient;
+    for (uint32_t ii = 0; ii < num_neuron; ++ii)
+    {
+        sum += m_outputWeights[ii].m_weight * arr_nextLayer[ii].m_gradient;
+    }
 
     return sum;
 }
@@ -232,8 +136,10 @@ void Neuron::feedForward(const t_Layer &arr_prevLayer)
     // Sum the previous layer's outputs (which are our inputs)
     // Include the bias node from the previous layer.
 
-    for (unsigned n = 0; n < arr_prevLayer.size(); ++n)
-        sum += arr_prevLayer[n].getOutputVal() * arr_prevLayer[n].m_arr_outputWeights[m_layer_index].m_weight;
+    for (uint32_t ii = 0; ii < arr_prevLayer.size(); ++ii)
+    {
+        sum += arr_prevLayer[ii].getOutputVal() * arr_prevLayer[ii].m_outputWeights[m_layer_index].m_weight;
+    }
 
     m_outputVal = Neuron::transferFunction(sum);
 }
@@ -255,10 +161,11 @@ void Neuron::updateInputWeights(t_Layer &arr_prevLayer)
     // The weights to be updated are in the Connection container
     // in the neurons in the preceding layer
 
-    for (unsigned n = 0; n < arr_prevLayer.size(); ++n)
+    for (Neuron &neuron : arr_prevLayer)
     {
-        Neuron &neuron = arr_prevLayer[n];
-        double oldDeltaWeight = neuron.m_arr_outputWeights[m_layer_index].m_deltaWeight;
+        auto& outSynapse = neuron.m_outputWeights[m_layer_index];
+
+        const double oldDeltaWeight = outSynapse.m_deltaWeight;
 
         double newDeltaWeight =
                 // Individual input, magnified by the gradient and train rate:
@@ -270,8 +177,8 @@ void Neuron::updateInputWeights(t_Layer &arr_prevLayer)
                 * oldDeltaWeight
                 ;
 
-        neuron.m_arr_outputWeights[m_layer_index].m_deltaWeight = newDeltaWeight;
-        neuron.m_arr_outputWeights[m_layer_index].m_weight += newDeltaWeight;
+        outSynapse.m_deltaWeight = newDeltaWeight;
+        outSynapse.m_weight += newDeltaWeight;
     }
 }
 
@@ -303,7 +210,7 @@ private: // static attr -> error
     static double k_recentAvgSmoothingFactor;
 
 public: // ctor/dtor
-    Net(const std::vector<unsigned> &arr_topology);
+    Net(const std::vector<uint32_t> &arr_topology);
 
 public: // public method(s)
     void feedForward(const t_vals &inputVals);
@@ -317,55 +224,66 @@ public: // public method(s) -> error
 
 double Net::k_recentAvgSmoothingFactor = 100.0; // Number of training samples to average over
 
-Net::Net(const std::vector<unsigned>& arr_topology)
+Net::Net(const std::vector<uint32_t>& arr_topology)
     :   m_error(0.0),
         m_recentAvgError(0.0)
 {
     assert( !arr_topology.empty() ); // no empty topology
 
-    for (unsigned i = 0; i < arr_topology.size(); ++i)
-    {
-        unsigned num_neuron = arr_topology[i];
+    RandomNumberGenerator rng;
+    rng.ensureRandomSeed();
 
-        assert( num_neuron > 0 ); // no empty layer
+    for (uint32_t ii = 0; ii < arr_topology.size(); ++ii)
+    {
+        uint32_t totalNeurons = arr_topology[ii];
+
+        assert( totalNeurons > 0 ); // no empty layer
+
+        totalNeurons += 1; // add a bias neuron
 
         m_arr_layers.push_back(t_Layer());
 
         t_Layer& arr_new_layer = m_arr_layers.back();
+        arr_new_layer.reserve(totalNeurons); // pre-allocate
 
-        bool is_last_layer = (i == (arr_topology.size() - 1));
+        const bool is_last_layer = ((ii + 1) == arr_topology.size());
 
         // 0 output if on the last layer
-        unsigned numOutputs = ((is_last_layer) ? (0) : (arr_topology[i + 1]));
+        const uint32_t numOutputs = ((is_last_layer) ? (0) : (arr_topology[ii + 1]));
 
-        // We have a new layer, now fill it with neurons, and
-        // add a bias neuron in each layer.
-        for (unsigned j = 0; j < (num_neuron + 1); ++j) // add a bias neuron
-            arr_new_layer.push_back( Neuron(numOutputs, j) );
+        // We have a new layer, now fill it with neurons (+ the extra bias neuron)
+        for (uint32_t jj = 0; jj < totalNeurons; ++jj)
+        {
+            arr_new_layer.emplace_back(numOutputs, jj, rng);
+        }
 
-        // Force the bias node's output to 1.0 (it was the last neuron pushed in this layer):
+        // Force the bias node's output to 1.0
+        // -> it was the last neuron pushed in this layer
         Neuron& bias_neuron = arr_new_layer.back();
         bias_neuron.setOutputVal(1.0);
     }
 }
 
-void Net::feedForward(const t_vals &arr_inputVals)
+void Net::feedForward(const t_vals &inputVals)
 {
-    assert( arr_inputVals.size() == (m_arr_layers[0].size() - 1) ); // exclude bias neuron
+    assert( inputVals.size() == (m_arr_layers[0].size() - 1) ); // exclude bias neuron
 
     // Assign (latch) the input values into the input neurons
-    for (unsigned i = 0; i < arr_inputVals.size(); ++i)
-        m_arr_layers[0][i].setOutputVal(arr_inputVals[i]);
+    for (uint32_t ii = 0; ii < inputVals.size(); ++ii)
+    {
+        m_arr_layers[0][ii].setOutputVal(inputVals[ii]);
+    }
 
     // forward propagate
-    for (unsigned i = 1; i < m_arr_layers.size(); ++i) // exclude input layer
+    // -> start at 1 -> exclude input layer
+    for (uint32_t ii = 1; ii < m_arr_layers.size(); ++ii)
     {
-        t_Layer& arr_prevLayer = m_arr_layers[i - 1];
-        t_Layer& arr_currLayer = m_arr_layers[i];
+        t_Layer& prevLayer = m_arr_layers[ii - 1];
+        t_Layer& currLayer = m_arr_layers[ii];
 
-        unsigned num_neuron = (arr_currLayer.size() - 1); // exclude bias neuron
-        for (unsigned n = 0; n < num_neuron; ++n)
-            arr_currLayer[n].feedForward(arr_prevLayer);
+        const uint32_t num_neuron = uint32_t(currLayer.size()) - 1; // exclude bias neuron
+        for (uint32_t jj = 0; jj < num_neuron; ++jj)
+            currLayer[jj].feedForward(prevLayer);
     }
 }
 
@@ -376,15 +294,18 @@ void Net::backProp(const t_vals &arr_targetVals)
 
     // Calculate overall net error (RMS of output neuron errors)
 
-    t_Layer &arr_outputLayer = m_arr_layers.back();
+    t_Layer &outputLayer = m_arr_layers.back();
     m_error = 0.0;
 
-    for (unsigned n = 0; n < arr_outputLayer.size() - 1; ++n)
+    // exclude bias neuron
+    const uint32_t numOutputs = uint32_t(outputLayer.size()) - 1;
+
+    for (uint32_t ii = 0; ii < numOutputs; ++ii)
     {
-        double delta = arr_targetVals[n] - arr_outputLayer[n].getOutputVal();
+        const double delta = arr_targetVals[ii] - outputLayer[ii].getOutputVal();
         m_error += delta * delta;
     }
-    m_error /= (arr_outputLayer.size() - 1); // get average error squared
+    m_error /= (outputLayer.size() - 1); // get average error squared
     m_error = sqrt(m_error); // RMS
 
     // Implement a recent average measurement
@@ -401,19 +322,24 @@ void Net::backProp(const t_vals &arr_targetVals)
     // Gradients
 
     // Calculate output layer gradients
-
-    for (unsigned n = 0; n < (arr_outputLayer.size() - 1); ++n)
-        arr_outputLayer[n].calcOutputGradients(arr_targetVals[n]);
+    for (uint32_t ii = 0; ii < numOutputs; ++ii)
+    {
+        outputLayer[ii].calcOutputGradients(arr_targetVals[ii]);
+    }
 
     // Calculate hidden layer gradients
 
-    for (unsigned i = (m_arr_layers.size() - 2); i > 0; --i)
-    {
-        t_Layer &arr_hiddenLayer = m_arr_layers[i];
-        t_Layer &arr_nextLayer = m_arr_layers[i + 1];
+    const uint32_t numHidden = uint32_t(m_arr_layers.size()) - 2;
 
-        for (unsigned n = 0; n < arr_hiddenLayer.size(); ++n)
-            arr_hiddenLayer[n].calcHiddenGradients(arr_nextLayer);
+    for (uint32_t ii = numHidden; ii > 0; --ii)
+    {
+        t_Layer &arr_currLayer = m_arr_layers[ii];
+        t_Layer &arr_nextLayer = m_arr_layers[ii + 1];
+
+        for (uint32_t jj = 0; jj < arr_currLayer.size(); ++jj)
+        {
+            arr_currLayer[jj].calcHiddenGradients(arr_nextLayer);
+        }
     }
 
     // Gradients
@@ -423,13 +349,20 @@ void Net::backProp(const t_vals &arr_targetVals)
     // For all layers from outputs to first hidden layer,
     // update connection weights
 
-    for (unsigned i = (m_arr_layers.size() - 1); i > 0; --i)
-    {
-        t_Layer &arr_currLayer = m_arr_layers[i];
-        t_Layer &arr_prevLayer = m_arr_layers[i - 1];
+    const uint32_t numInputAndHidden = numHidden + 1;
 
-        for (unsigned n = 0; n < (arr_currLayer.size() - 1); ++n) // exclude bias
-            arr_currLayer[n].updateInputWeights(arr_prevLayer);
+    for (uint32_t ii = numInputAndHidden; ii > 0; --ii)
+    {
+        t_Layer &arr_prevLayer = m_arr_layers[ii - 1];
+        t_Layer &arr_currLayer = m_arr_layers[ii];
+
+        // exclude last neuron (bias neuron)
+        const uint32_t sizeLayer = uint32_t(arr_currLayer.size()) - 1;
+
+        for (uint32_t jj = 0; jj < sizeLayer; ++jj)
+        {
+            arr_currLayer[jj].updateInputWeights(arr_prevLayer);
+        }
     }
 }
 
@@ -437,13 +370,17 @@ void Net::getResults(t_vals &arr_resultVals) const
 {
     arr_resultVals.clear();
 
-    const t_Layer& arr_outputLayer = m_arr_layers.back();
+    const t_Layer& outputLayer = m_arr_layers.back();
 
     // exclude last neuron (bias neuron)
-    unsigned total_neuron = (arr_outputLayer.size() - 1);
+    const uint32_t total_neuron = uint32_t(outputLayer.size()) - 1;
 
-    for (unsigned n = 0; n < total_neuron; ++n)
-        arr_resultVals.push_back(arr_outputLayer[n].getOutputVal());
+    arr_resultVals.reserve(total_neuron); // pre-allocate
+
+    for (uint32_t ii = 0; ii < total_neuron; ++ii)
+    {
+        arr_resultVals.push_back(outputLayer[ii].getOutputVal());
+    }
 }
 
 // NET
@@ -465,22 +402,38 @@ void Net::getResults(t_vals &arr_resultVals) const
 void showVectorVals(const std::string& prefix, const t_vals &arr_values)
 {
     std::cout << prefix << " ";
-    for (unsigned i = 0; i < arr_values.size(); ++i)
-        std::cout << std::fixed << arr_values[i] << " ";
+    for (uint32_t i = 0; i < arr_values.size(); ++i)
+        std::cout << std::fixed << std::setprecision(2) << arr_values[i] << " ";
 
     std::cout << std::endl;
 }
 
-
-int main()
+void printUsageAndExit(const char* programName)
 {
-    TrainingData trainData("trainsample/out_xor.txt");
+	std::cerr << "Usage 1: " << programName << " and" << std::endl;
+	std::cerr << "Usage 2: " << programName << " or" << std::endl;
+	std::cerr << "Usage 3: " << programName << " no" << std::endl;
+	std::cerr << "Usage 4: " << programName << " xor" << std::endl;
+	exit(EXIT_FAILURE);
+}
+
+
+int main(int argc, char** argv)
+{
+    if (argc != 2) {
+		printUsageAndExit(argv[0]);
+	}
+
+    std::string trainingFilename = argv[1];
+
+    // TrainingData trainData("trainsample/out_xor.txt");
     // TrainingData trainData("trainsample/out_and.txt");
     // TrainingData trainData("trainsample/out_or.txt");
     // TrainingData trainData("trainsample/out_no.txt");
+    TrainingData trainData(trainingFilename);
 
     // e.g., { 3, 2, 1 }
-    std::vector<unsigned> arr_topology;
+    std::vector<uint32_t> arr_topology;
     trainData.getTopology(arr_topology);
 
     Net myNet(arr_topology);
@@ -488,7 +441,7 @@ int main()
     t_vals arr_inputVals, arr_targetVals, arr_resultVals;
     int trainingPass = 0;
 
-    while (!trainData.isEof()) 
+    while (!trainData.isEof())
     {
         ++trainingPass;
         std::cout << std::endl << "Pass " << trainingPass << std::endl;
@@ -534,9 +487,9 @@ int main()
         std::cout << "TEST" << std::endl;
         std::cout << std::endl;
 
-        unsigned dblarr_test[4][2] = { {0,0}, {0,1}, {1,0}, {1,1} };
+        uint32_t dblarr_test[4][2] = { {0,0}, {0,1}, {1,0}, {1,1} };
 
-        for (unsigned i = 0; i < 4; ++i)
+        for (uint32_t i = 0; i < 4; ++i)
         {
             arr_inputVals.clear();
             arr_inputVals.push_back(dblarr_test[i][0]);
