@@ -191,8 +191,11 @@ class NeuralNetwork {
           const newSynapse: Synapse = {
             input: prevNeuron,
             output: nextNeuron,
-            weight: (Math.random() - Math.random()), // [-1..1]
-            // weight: -Math.random(), // [0..1]
+
+            weight: Math.random(), // [0..1]
+
+            // // relu friendly weights
+            // weight: 0.2 + Math.random() * 0.8, // [0.2..1]
           };
 
           prevNeuron._outputSynapses.push(newSynapse);
