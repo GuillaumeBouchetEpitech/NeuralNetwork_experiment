@@ -16,7 +16,9 @@ var fs = require('fs');
 
 function TrainingData (str_file) {
 
-	var sample = fs.readFileSync('../src/trainsample/out_xor.txt', 'utf8');
+	// var sample = fs.readFileSync('../src/trainsample/out_xor.txt', 'utf8');
+	var sample = fs.readFileSync('../../projects/training-logic/assets/training-data-xor-gate.txt', 'utf8');
+
 
 	sample = sample.trim();
 	this._arr_lines = sample.split('\n');
