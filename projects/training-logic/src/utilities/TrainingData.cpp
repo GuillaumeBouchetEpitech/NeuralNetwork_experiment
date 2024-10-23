@@ -14,6 +14,8 @@ TrainingData::TrainingData(const std::string& filename)
 
 void TrainingData::getTopology(std::vector<unsigned> &arr_topology)
 {
+    arr_topology.reserve(10); // pre-allocate
+
     std::string line;
     std::string label;
 
@@ -22,7 +24,9 @@ void TrainingData::getTopology(std::vector<unsigned> &arr_topology)
     ss >> label;
 
     if (this->isEof() || label != "topology:")
+    {
         abort();
+    }
 
     while (!ss.eof())
     {

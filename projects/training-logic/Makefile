@@ -12,8 +12,10 @@ TARGET_PATHNAME= 	$(TARGET_DIR)/$(TARGET_NAME)
 SRC_DIR=	./src
 SRC=	\
 	$(SRC_DIR)/main.cpp	\
-	$(SRC_DIR)/TrainingData.cpp	\
-	$(SRC_DIR)/utilities/RandomNumberGenerator.cpp
+	$(SRC_DIR)/machine-learning/Neuron.cpp \
+	$(SRC_DIR)/machine-learning/NeuralNetwork.cpp \
+	$(SRC_DIR)/utilities/RandomNumberGenerator.cpp \
+	$(SRC_DIR)/utilities/TrainingData.cpp
 
 OBJ_DIR=	./obj
 OBJ=		$(patsubst %.cpp, $(OBJ_DIR)/%.o, $(SRC))
@@ -25,7 +27,7 @@ OBJ=		$(patsubst %.cpp, $(OBJ_DIR)/%.o, $(SRC))
 
 CXXFLAGS+=	-Wall -W -Wextra -Wunused
 CXXFLAGS+=	-O3
-CXXFLAGS+=	-std=c++11
+CXXFLAGS+=	-std=c++20
 CXXFLAGS+=	-I./
 
 LDFLAGS=	-O3
