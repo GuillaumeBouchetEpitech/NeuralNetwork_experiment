@@ -40,6 +40,23 @@ namespace ActivationFunctions {
             return x < 0.0 ? 0.0 : x;
         }
     }
+
+    namespace leakyRelu {
+        double activation(double x)
+        {
+            // leaky relu
+            if (x > 0) {
+                return x;
+            }
+            return x * 0.1;
+        }
+
+        double derivative(double x)
+        {
+            // leaky relu derivative
+            return x < 0.1 ? 0.0 : x;
+        }
+    }
 }
 
 
@@ -85,7 +102,7 @@ void Neuron::feedForward(const t_Layer &prevLayer)
 #ifndef D_USE_RELU
     _outputVal = ActivationFunctions::tanh::activation(sum);
 #else
-    _outputVal = ActivationFunctions::relu::activation(sum);
+    _outputVal = ActivationFunctions::leakyRelu::activation(sum);
 #endif
 }
 
@@ -97,7 +114,7 @@ void Neuron::calcOutputGradients(double targetVal)
 #else
     _gradientOutputVal = 2.0 * (_outputVal - targetVal);
     // const double delta = _outputVal - targetVal;
-    // _gradientOutputVal = delta * ActivationFunctions::relu::derivative(_outputVal);
+    // _gradientOutputVal = delta * ActivationFunctions::leakyRelu::derivative(_outputVal);
 #endif
 }
 
@@ -107,7 +124,7 @@ void Neuron::calcHiddenGradients(const t_Layer &nextLayer)
 #ifndef D_USE_RELU
     _gradientOutputVal = dow * ActivationFunctions::tanh::derivative(_outputVal);
 #else
-    _gradientOutputVal = dow * ActivationFunctions::relu::derivative(_outputVal);
+    _gradientOutputVal = dow * ActivationFunctions::leakyRelu::derivative(_outputVal);
 #endif
 }
 

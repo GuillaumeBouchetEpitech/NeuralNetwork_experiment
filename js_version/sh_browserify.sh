@@ -23,4 +23,4 @@
 # nodejs node_modules/browserify/bin/cmd.js -t ./node_modules/uglifyify/index.js ./webgl_experiment/app.js > ./webgl_experiment/dist/bundle.js
 
 # global uglification
-nodejs node_modules/browserify/bin/cmd.js -g ./node_modules/uglifyify/index.js ./src/app.js > ./dist/bundle.js
+node node_modules/browserify/bin/cmd.js -g ./node_modules/uglifyify/index.js ./src/app.js > ./dist/bundle.js

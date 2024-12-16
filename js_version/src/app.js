@@ -172,6 +172,9 @@ function runNeuralNet() {
 
 
                 ++trainingPass;
+
+                elem_logs.value = ""; // clear logs
+
                 print();
                 print("Pass " + trainingPass);
 

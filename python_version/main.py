@@ -2,7 +2,6 @@
 
 
 import math
-from typing import Any, List
 
 
 
@@ -15,10 +14,10 @@ from typing import Any, List
 
 
 
-def activations_tanh_activate(x: float):
+def activations_tanh_activate(x: float) -> float:
   return math.tanh(x) # [-1.0..1.0]
 
-def activations_tanh_derive(x: float):
+def activations_tanh_derivative(x: float) -> float:
   return 1.0 - math.tanh(x * x) # [-1.0..1.0]
 
 
@@ -32,6 +31,7 @@ def activations_tanh_derive(x: float):
 
 from abc import ABC
 
+# this only exist so that the Connection class has a type definition for neuron
 class AbstractClassNeuron(ABC):
   _outputValue: float = 0
   _gradientOutputValue: float = 0
@@ -58,8 +58,8 @@ class Connection:
 
 class Neuron(AbstractClassNeuron):
 
-  _inputConnections: List[Connection]
-  _outputConnections: List[Connection]
+  _inputConnections: list[Connection]
+  _outputConnections: list[Connection]
   _outputValue: float
   _gradientOutputValue: float
   _isBias: bool
@@ -75,7 +75,7 @@ class Neuron(AbstractClassNeuron):
     if self._isBias is True:
       self._outputValue = 1
 
-  def feedForward(self):
+  def feedForward(self) -> None:
 
     # is bias -> skip
     if self._isBias is True:
@@ -92,16 +92,16 @@ class Neuron(AbstractClassNeuron):
 
     self._outputValue = activations_tanh_activate(sum)
 
-  def calculateGradient_output(self, targetValue: float):
+  def calculateGradient_output(self, targetValue: float) -> None:
 
     # is not part of the output layer -> crash
     if len(self._inputConnections) == 0 or len(self._outputConnections) != 0:
       raise TypeError("not part of a output layer")
 
     delta = targetValue - self._outputValue
-    self._gradientOutputValue = delta * activations_tanh_derive(self._outputValue)
+    self._gradientOutputValue = delta * activations_tanh_derivative(self._outputValue)
 
-  def calculateGradient_hidden(self):
+  def calculateGradient_hidden(self) -> None:
 
     # is not part of a hidden layer -> crash
     if self._isBias is False and len(self._inputConnections) == 0:
@@ -116,9 +116,9 @@ class Neuron(AbstractClassNeuron):
         continue
       sum += outputConnection.weight * outputConnection.output._gradientOutputValue
 
-    self._gradientOutputValue = sum * activations_tanh_derive(self._outputValue)
+    self._gradientOutputValue = sum * activations_tanh_derivative(self._outputValue)
 
-  def updateInputWeights(self):
+  def updateInputWeights(self) -> None:
     # The weights to be updated are in the Connection container
     # in the neurons in the preceding layer
 
@@ -147,12 +147,12 @@ import random
 
 class NeuralNetwork:
 
-  _layers: List[List[Neuron]] = []
+  _layers: list[list[Neuron]] = []
   _error: float = 0
   _recentAvgError: float = 0
 
 
-  def __init__(self, topology: List[float]):
+  def __init__(self, topology: list[int]):
 
     if (len(topology) < 2):
       raise TypeError("invalid amount of layers")
@@ -165,11 +165,11 @@ class NeuralNetwork:
     self._connectTheLayers()
 
 
-  def _buildTheLayers(self, topology: List[float]):
+  def _buildTheLayers(self, topology: list[float]) -> None:
 
     for ii in range(len(topology)):
 
-      newLayer: List[Neuron] = []
+      newLayer: list[Neuron] = []
 
       for _ in range(topology[ii]):
         newLayer.append(Neuron(False))
@@ -180,7 +180,7 @@ class NeuralNetwork:
 
       self._layers.append(newLayer)
 
-  def _connectTheLayers(self):
+  def _connectTheLayers(self) -> None:
 
     for ii in range(len(self._layers) - 1):
 
@@ -198,7 +198,7 @@ class NeuralNetwork:
           prevNeuron._outputConnections.append(newConnection)
           nextNeuron._inputConnections.append(newConnection)
 
-  def feedForward(self, inputValues: List[float]) -> List[float]:
+  def feedForward(self, inputValues: list[float]) -> list[float]:
 
     # skip the bias neuron -> -1
     total_input_neurons = len(self._layers[0]) - 1
@@ -218,7 +218,7 @@ class NeuralNetwork:
     #   print(f"neuron {neuron._outputValue}")
 
 
-    outputValues: List[float] = []
+    outputValues: list[float] = []
 
     outputLayer = self._layers[-1]
     for neuron in outputLayer:
@@ -226,7 +226,7 @@ class NeuralNetwork:
 
     return outputValues
 
-  def backProp(self, targetValues: List[float]):
+  def backPropagation(self, targetValues: list[float]) -> None:
 
     outputLayer = self._layers[-1]
 
@@ -268,7 +268,7 @@ class NeuralNetwork:
       for neuron in currLayer:
         neuron.updateInputWeights()
 
-  def debug(self):
+  def debug(self) -> None:
     for (index1, layer) in enumerate(self._layers):
       print(f'layer {index1}')
       print(f'  neurons: {len(layer)}')
@@ -298,10 +298,10 @@ class NeuralNetwork:
 
 class TrainingData:
 
-  input: List[float]
-  output: List[float]
+  input: list[float]
+  output: list[float]
 
-  def __init__(self, input: List[float], output: List[float]):
+  def __init__(self, input: list[float], output: list[float]):
     self.input = input
     self.output = output
 
@@ -309,17 +309,26 @@ class TrainingData:
 
 
 
-trainingData: List[TrainingData] = [
-  TrainingData([0,0], [0]),
-  TrainingData([1,0], [1]),
-  TrainingData([0,1], [1]),
-  TrainingData([1,1], [0]),
+
+# training the "XOR logical gate"
+
+trainingData: list[TrainingData] = [
+  TrainingData([0,0], [0]), # A=0 + B=0 -> result=0
+  TrainingData([1,0], [1]), # A=1 + B=0 -> result=1
+  TrainingData([0,1], [1]), # A=0 + B=1 -> result=1
+  TrainingData([1,1], [0]), # A=1 + B=1 -> result=0
 ]
 
-neuralNetwork = NeuralNetwork([2,3,1])
+# network topology
+# input layer  -> 2 neurons
+# hidden layer -> 3 neurons
+# output layer -> 1 neuron
+networkTopology: list[int] = [2,3,1]
 
-training_progress: List[float] = []
-training_error: List[float] = []
+neuralNetwork = NeuralNetwork(networkTopology)
+
+training_progress: list[float] = []
+training_error: list[float] = []
 
 trainingPass = 0
 
@@ -330,7 +339,7 @@ while trainingPass < 100000:
   trainingPass += 1
 
   results = neuralNetwork.feedForward(currData.input)
-  neuralNetwork.backProp(currData.output)
+  neuralNetwork.backPropagation(currData.output)
 
   # neuralNetwork.debug()
 
@@ -352,7 +361,7 @@ print("DONE")
 
 print("PRINT FINAL RESULT")
 
-def reduce_to_two_decimal(value: float):
+def reduce_to_two_decimal(value: float) -> float:
   return float("{:.2f}".format(value))
 
 for currData in trainingData:
